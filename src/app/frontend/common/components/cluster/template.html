@@ -15,32 +15,32 @@ limitations under the License.
 -->
 
 <div class="kd-namespace-select-title kd-muted"
-     i18n>Namespace</div>
+     i18n>Cluster</div>
 <mat-form-field class="kd-namespace-select-input-container">
-  <mat-select (openedChange)="onNamespaceToggle($event)"
-              [(ngModel)]="selectedNamespace">
-    <div [ngClass]="{'kd-namespace-select-input-border': namespaces.length > 0}">
-      <input #namespaceInput
+  <mat-select (openedChange)="onClusterToggle($event)"
+              [(ngModel)]="selectedCluster">
+    <div [ngClass]="{'kd-namespace-select-input-border': clusters.length > 0}">
+      <input #clusterInput
              i18n-placeholder
-             placeholder="Select namespace..."
-             [(ngModel)]="selectNamespaceInput"
-             name="selectNamespaceInput"
+             placeholder="Select cluster..."
+             [(ngModel)]="selectClusterInput"
+             name="selectClusterInput"
              class="kd-namespace-select-input"
              autocomplete="off"
-             (keydown)="$event.keyCode === 13 ? selectNamespace() : null">
+             (keydown)="$event.keyCode === 13 ? selectCluster() : null">
     </div>
 <!--    <mat-option *ngIf="namespaces.length"-->
 <!--                [value]="allNamespacesKey"-->
 <!--                i18n>All namespaces</mat-option>-->
-    <mat-optgroup label="NAMESPACES"
+    <mat-optgroup label="CLUSTERS"
                   i18n-label
-                  *ngIf="(namespaces | filterBy: selectNamespaceInput).length">
-      <mat-option *ngFor="let namespace of namespaces | filterBy: selectNamespaceInput"
-                  [value]="namespace">
-        {{namespace}}
+                  *ngIf="(clusters | filterBy: selectClusterInput).length">
+      <mat-option *ngFor="let cluster of clusters | filterBy: selectClusterInput"
+                  [value]="cluster">
+        {{cluster}}
       </mat-option>
     </mat-optgroup>
     <mat-option class="kd-hidden"
-                [value]="selectedNamespace">{{formatNamespaceName(selectedNamespace)}}</mat-option>
+                [value]="selectedCluster">{{formatCluster(selectedCluster)}}</mat-option>
   </mat-select>
 </mat-form-field>

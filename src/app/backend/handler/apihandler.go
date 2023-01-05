@@ -15,7 +15,8 @@
 package handler
 
 import (
-	"log"
+  "github.com/kubernetes/dashboard/src/app/backend/client"
+  "log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -222,27 +223,27 @@ func CreateHTTPAPIHandler(iManager integration.IntegrationManager, cManager clie
 			To(apiHandler.handleGetPods).
 			Writes(pod.PodList{}))
 	apiV1Ws.Route(
-		apiV1Ws.GET("/pod/{namespace}").
+		apiV1Ws.GET("/pod/{cluster}/{namespace}").
 			To(apiHandler.handleGetPods).
 			Writes(pod.PodList{}))
 	apiV1Ws.Route(
-		apiV1Ws.GET("/pod/{namespace}/{pod}").
+		apiV1Ws.GET("/pod/{cluster}/{namespace}/{pod}").
 			To(apiHandler.handleGetPodDetail).
 			Writes(pod.PodDetail{}))
 	apiV1Ws.Route(
-		apiV1Ws.GET("/pod/{namespace}/{pod}/container").
+		apiV1Ws.GET("/pod/{cluster}/{namespace}/{pod}/container").
 			To(apiHandler.handleGetPodContainers).
 			Writes(pod.PodDetail{}))
 	apiV1Ws.Route(
-		apiV1Ws.GET("/pod/{namespace}/{pod}/event").
+		apiV1Ws.GET("/pod/{cluster}/{namespace}/{pod}/event").
 			To(apiHandler.handleGetPodEvents).
 			Writes(common.EventList{}))
 	apiV1Ws.Route(
-		apiV1Ws.GET("/pod/{namespace}/{pod}/shell/{container}").
+		apiV1Ws.GET("/pod/{cluster}/{namespace}/{pod}/shell/{container}").
 			To(apiHandler.handleExecShell).
 			Writes(TerminalResponse{}))
 	apiV1Ws.Route(
-		apiV1Ws.GET("/pod/{namespace}/{pod}/persistentvolumeclaim").
+		apiV1Ws.GET("/pod/{cluster}/{namespace}/{pod}/persistentvolumeclaim").
 			To(apiHandler.handleGetPodPersistentVolumeClaims).
 			Writes(persistentvolumeclaim.PersistentVolumeClaimList{}))
 
@@ -1421,6 +1422,16 @@ func (apiHandler *APIHandler) handleGetDeploymentNewReplicaSet(request *restful.
 }
 
 func (apiHandler *APIHandler) handleGetPods(request *restful.Request, response *restful.Response) {
+  //log.Print("Successful initial request to the apiserver, version: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+  //print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+  //clientManager := client.NewClientManager("/etc/kubernetes/kubelet.conf", "https://192.168.142.131:6443")
+  clientManager := client.NewClientManager("/home/V4-XMZ.config", "https://192.168.142.131:6443")
+  versionInfo, err := clientManager.InsecureClient().Discovery().ServerVersion()
+  if err != nil {
+   handleFatalInitError(err)
+  }
+  log.Printf("Successful initial request to the apiserver, version: %s", versionInfo.String())
+  //k8sClient, err := clientManager.Client(request)
 	k8sClient, err := apiHandler.cManager.Client(request)
 	if err != nil {
 		errors.HandleInternalError(response, err)
@@ -2481,3 +2492,13 @@ func parseNamespacePathParameter(request *restful.Request) *common.NamespaceQuer
 	}
 	return common.NewNamespaceQuery(nonEmptyNamespaces)
 }
+
+func handleFatalInitError(err error) {
+  log.Fatalf("Error while initializing connection to Kubernetes apiserver. "+
+    "This most likely means that the cluster is misconfigured (e.g., it has "+
+    "invalid apiserver certificates or service account's configuration) or the "+
+    "--apiserver-host param points to a server that does not exist. Reason: %s\n"+
+    "Refer to our FAQ and wiki pages for more information: "+
+    "https://github.com/kubernetes/dashboard/wiki/FAQ", err)
+}
+

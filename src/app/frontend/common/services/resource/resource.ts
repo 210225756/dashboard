@@ -21,6 +21,7 @@ import {publishReplay, refCount, switchMap, switchMapTo} from 'rxjs/operators';
 import {ResourceBase} from '../../resources/resource';
 import {GlobalSettingsService} from '../global/globalsettings';
 import {NamespaceService} from '../global/namespace';
+import {ClusterService} from "../global/cluster";
 
 @Injectable()
 export class ResourceService<T> extends ResourceBase<T> {
@@ -60,6 +61,7 @@ export class NamespacedResourceService<T> extends ResourceBase<T> {
   constructor(
     readonly http: HttpClient,
     private readonly namespace_: NamespaceService,
+    private readonly cluster_: ClusterService,
     private readonly settings_: GlobalSettingsService,
   ) {
     super(http);
@@ -71,6 +73,8 @@ export class NamespacedResourceService<T> extends ResourceBase<T> {
   }
 
   get(endpoint: string, name?: string, namespace?: string, params?: HttpParams): Observable<T> {
+    const currentCluster = this.cluster_.current();
+    endpoint = endpoint.replace(':cluster', currentCluster);
     if (namespace) {
       endpoint = endpoint.replace(':namespace', namespace);
     } else {

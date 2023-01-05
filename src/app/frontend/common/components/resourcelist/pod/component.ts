@@ -36,7 +36,7 @@ import {ListGroupIdentifier, ListIdentifier} from '../groupids';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PodListComponent extends ResourceListWithStatuses<PodList, Pod> {
-  @Input() endpoint = EndpointManager.resource(Resource.pod, true).list();
+  @Input() endpoint = EndpointManager.resource(Resource.pod, true, true).list();
   @Input() showMetrics = false;
   cumulativeMetrics: Metric[];
 

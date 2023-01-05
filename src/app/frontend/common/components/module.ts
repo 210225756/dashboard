@@ -93,6 +93,7 @@ import {TextInputComponent} from './textinput/component';
 import {UploadFileComponent} from './uploadfile/component';
 import {WorkloadStatusComponent} from './workloadstatus/component';
 import {ZeroStateComponent} from './zerostate/component';
+import {ClusterSelectorComponent} from "./cluster/component";
 
 const components = [
   ActionbarDetailActionsComponent,
@@ -154,6 +155,7 @@ const components = [
 
   NamespaceListComponent,
   NodeListComponent,
+  ClusterSelectorComponent,
   NamespaceSelectorComponent,
   NamespaceChangeDialog,
 

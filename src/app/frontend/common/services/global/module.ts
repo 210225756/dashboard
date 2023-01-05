@@ -37,6 +37,7 @@ import {PluginsConfigService} from './plugin';
 import {PluginLoaderService} from '../pluginloader/pluginloader.service';
 import {ClientPluginLoaderService} from '../pluginloader/clientloader.service';
 import {PinnerService} from './pinner';
+import {ClusterService} from "./cluster";
 
 @NgModule({
   providers: [
@@ -53,6 +54,7 @@ import {PinnerService} from './pinner';
     ThemeService,
     KdStateService,
     NamespaceService,
+    ClusterService,
     ActionbarService,
     VerberService,
     PinnerService,

@@ -42,6 +42,7 @@ export enum Resource {
   event = 'event',
   container = 'container',
   plugin = 'plugin',
+  cluster = 'cluster',
 }
 
 export enum Utility {
@@ -49,14 +50,18 @@ export enum Utility {
 }
 
 class ResourceEndpoint {
-  constructor(private readonly resource_: Resource, private readonly namespaced_ = false) {}
+  constructor(
+    private readonly resource_: Resource,
+    private readonly namespaced_ = false,
+    private readonly clusterd_ = false,
+  ) {}
 
   list(): string {
-    return `${baseHref}/${this.resource_}${this.namespaced_ ? '/:namespace' : ''}`;
+    return `${baseHref}/${this.resource_}${this.clusterd_ ? '/:cluster' : ''}${this.namespaced_ ? '/:namespace' : ''}`;
   }
 
   detail(): string {
-    return `${baseHref}/${this.resource_}${this.namespaced_ ? '/:namespace' : ''}/:name`;
+    return `${baseHref}/${this.resource_}${this.clusterd_ ? '/:cluster' : ''}${this.namespaced_ ? '/:namespace' : ''}/:name`;
   }
 
   child(resourceName: string, relatedResource: Resource, resourceNamespace?: string): string {
@@ -64,7 +69,7 @@ class ResourceEndpoint {
       resourceNamespace = ':namespace';
     }
 
-    return `${baseHref}/${this.resource_}${
+    return `${baseHref}/${this.resource_}${this.clusterd_ ? '/:cluster' : ''}${
       this.namespaced_ ? `/${resourceNamespace}` : ''
     }/${resourceName}/${relatedResource}`;
   }
@@ -79,8 +84,8 @@ class UtilityEndpoint {
 }
 
 export class EndpointManager {
-  static resource(resource: Resource, namespaced?: boolean): ResourceEndpoint {
-    return new ResourceEndpoint(resource, namespaced);
+  static resource(resource: Resource, namespaced?: boolean, clusterd?: boolean): ResourceEndpoint {
+    return new ResourceEndpoint(resource, namespaced, clusterd);
   }
 
   static utility(utility: Utility): UtilityEndpoint {

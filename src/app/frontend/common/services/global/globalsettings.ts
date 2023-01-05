@@ -31,7 +31,7 @@ export class GlobalSettingsService {
     itemsPerPage: 10,
     clusterName: '',
     logsAutoRefreshTimeInterval: 5,
-    resourceAutoRefreshTimeInterval: 5,
+    resourceAutoRefreshTimeInterval: 50,
     disableAccessDeniedNotifications: false,
   };
   private isInitialized_ = false;
