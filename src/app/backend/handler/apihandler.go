@@ -1431,8 +1431,8 @@ func (apiHandler *APIHandler) handleGetPods(request *restful.Request, response *
    handleFatalInitError(err)
   }
   log.Printf("Successful initial request to the apiserver, version: %s", versionInfo.String())
-  //k8sClient, err := clientManager.Client(request)
-	k8sClient, err := apiHandler.cManager.Client(request)
+  k8sClient, err := clientManager.Client(request)
+	//k8sClient, err := apiHandler.cManager.Client(request)
 	if err != nil {
 		errors.HandleInternalError(response, err)
 		return

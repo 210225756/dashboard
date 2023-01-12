@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/kubernetes/dashboard/src/app/backend/client"
-	"io/ioutil"
+  clientapi "github.com/kubernetes/dashboard/src/app/backend/client/api"
+  "io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -15,25 +16,24 @@ type PAASHandler interface {
 }
 
 type ClusterInfo struct {
-	area          string `json:"area"`
-	clusterId     string `json:"clusterId"`
-	clusterLBIP   string `json:"clusterLBIP"`
-	clusterLBPort string `json:"clusterLBPort"`
-}
-type ClusterList struct {
-	ClusterInfos []*ClusterInfo
+	Area          string `json:"area"`
+	ClusterId     string `json:"clusterId"`
+	ClusterLBIP   string `json:"clusterLBIP"`
+	ClusterLBPort string `json:"clusterLBPort"`
 }
 
-func (p *ClusterList) GetAllCluster() error {
+func GetAllCluster() ([]ClusterInfo, error) {
 	// PAAS_ADMIN_URL is paas admin domain address
 	envPaasAdminUrl := os.Getenv("PAAS_ADMIN_URL")
+  //envPaasAdminUrl := "192.168.66.1:8888"
+  var p []ClusterInfo
 	if envPaasAdminUrl == "" {
-		return fmt.Errorf("PAAS_ADMIN_URL should not be empty")
+		return p, fmt.Errorf("PAAS_ADMIN_URL should not be empty")
 	}
 	url := fmt.Sprintf("http://%s/icbc/paas/api/cluster/getAllCluster", envPaasAdminUrl)
 	resp, err := http.Get(url)
 	if err != nil {
-		return err
+		return p, err
 	}
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
@@ -42,27 +42,27 @@ func (p *ClusterList) GetAllCluster() error {
 		fmt.Println("ok")
 		json.Unmarshal([]byte(body), &p)
 	}
-	return fmt.Errorf("ERROR when get all cluster from paas plat, the status code is %s", resp.StatusCode)
+	return p, fmt.Errorf("ERROR when get all cluster from paas plat, the status code is %s", resp.StatusCode)
 }
-
-func (p *ClusterList) GetClient(cluster string) error {
+// GetClient change client-go
+func GetClient(clusterList []ClusterInfo, cluster string) (clientapi.ClientManager, error) {
 	kubeConfigDir := os.Getenv("KUBE_CONFIG_DIR")
 	if kubeConfigDir == "" {
-		return fmt.Errorf("KUBE_CONFIG_DIR should not be empty")
+		return nil, fmt.Errorf("KUBE_CONFIG_DIR should not be empty")
 	}
 	kubeConfigPath := fmt.Sprintf("%s/%s", kubeConfigDir, cluster)
 	exist, err := KubeConfigExists(kubeConfigPath)
 	if !exist {
-		return err
+		return nil, err
 	}
 
 	var apiServer string
-	for _, clusterInfo := range p.ClusterInfos {
-		if clusterInfo.clusterId == cluster {
-			if clusterInfo.clusterLBPort == "8080" {
-				apiServer = fmt.Sprintf("http://%s:%s", clusterInfo.clusterLBIP, clusterInfo.clusterLBPort)
+	for _, clusterInfo := range clusterList {
+		if clusterInfo.ClusterId == cluster {
+			if clusterInfo.ClusterLBPort == "8080" {
+				apiServer = fmt.Sprintf("http://%s:%s", clusterInfo.ClusterLBIP, clusterInfo.ClusterLBPort)
 			} else {
-				apiServer = fmt.Sprintf("https://%s:%s", clusterInfo.clusterLBIP, clusterInfo.clusterLBPort)
+				apiServer = fmt.Sprintf("https://%s:%s", clusterInfo.ClusterLBIP, clusterInfo.ClusterLBPort)
 			}
 		}
 	}
@@ -73,7 +73,7 @@ func (p *ClusterList) GetClient(cluster string) error {
 		handleFatalInitError(err)
 	}
 	log.Printf("Successful initial request to the apiserver, version: %s", versionInfo.String())
-	return nil
+	return clientManager, nil
 }
 
 // KubeConfigExists check kubeconfig isExists
