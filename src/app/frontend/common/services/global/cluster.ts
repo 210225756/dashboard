@@ -22,9 +22,9 @@ export class ClusterService {
   /**
    * Internal key for empty selection. To differentiate empty string from nulls.
    */
-  private readonly allNamespacesKey_ = '_all';
+  private readonly allClustersKey_ = '_all';
   /**
-   * Regular expression for namespace validation.
+   * Regular expression for cluster validation.
    */
   private readonly clusterRegex = /^([A-Za-z0-9]([-A-Za-z0-9]*[A-Za-z0-9])?|_all)$/;
   /**
@@ -50,10 +50,10 @@ export class ClusterService {
   }
 
   isMultiCluster(cluster: string): boolean {
-    return cluster === this.allNamespacesKey_;
+    return cluster === this.allClustersKey_;
   }
 
-  areMultipleNamespacesSelected(): boolean {
-    return this.currentCluster_ ? this.currentCluster_ === this.allNamespacesKey_ : true;
+  areMultipleClustersSelected(): boolean {
+    return this.currentCluster_ ? this.currentCluster_ === this.allClustersKey_ : true;
   }
 }

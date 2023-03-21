@@ -12,25 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import {Component, Input} from '@angular/core';
-import {ObjectMeta} from '@api/backendapi';
-import {KdStateService} from '../../../../services/global/state';
+import {Component, Inject} from '@angular/core';
+import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 
 @Component({
-  selector: 'kd-actionbar-detail-exec',
-  templateUrl: './template.html',
+  selector: 'kd-cluster-change-dialog',
+  templateUrl: 'template.html',
 })
-export class ActionbarDetailExecComponent {
-  @Input() objectMeta: ObjectMeta;
+export class ClusterChangeDialog {
+  cluster: string;
+  newCluster: string;
 
-  constructor(private readonly kdState_: KdStateService) {}
+  constructor(
+    public dialogRef: MatDialogRef<ClusterChangeDialog>,
+    @Inject(MAT_DIALOG_DATA) public data: {cluster: string; newCluster: string},
+  ) {
+    this.cluster = data.cluster;
+    this.newCluster = data.newCluster;
+  }
 
-  getHref(): string {
-    return this.kdState_.href(
-      'shell',
-      this.objectMeta.name,
-      this.objectMeta.namespace,
-      this.objectMeta.cluster,
-    );
+  onNoClick(): void {
+    this.dialogRef.close();
   }
 }

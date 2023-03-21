@@ -48,7 +48,7 @@
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
             "aot": true,
-            "outputPath": ".tmp/frontend",
+            "outputPath": "/icbc/paas/dashboard",
             "index": "src/app/frontend/index.html",
             "main": "src/app/frontend/index.ts",
             "tsConfig": "src/app/frontend/../../../aio/tsconfig.app.json",

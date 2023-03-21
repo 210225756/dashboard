@@ -27,6 +27,7 @@ export interface ListMeta {
 export interface ObjectMeta {
   name?: string;
   namespace?: string;
+  cluster?: string;
   labels?: StringMap;
   annotations?: StringMap;
   creationTimestamp?: string;
@@ -125,6 +126,10 @@ export interface JobList extends ResourceList {
 
 export interface NamespaceList extends ResourceList {
   namespaces: Namespace[];
+}
+
+export interface ClusterList extends ResourceList {
+  clusters: Cluster[];
 }
 
 export interface NodeList extends ResourceList {
@@ -289,6 +294,12 @@ export interface Job extends Resource {
 
 export interface Namespace extends Resource {
   phase: string;
+}
+
+export interface Cluster extends Resource {
+  area: string;
+  lbIp: string;
+  lbPort: string;
 }
 
 export interface Node extends Resource {

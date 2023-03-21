@@ -37,3 +37,4 @@ import '@angular/localize/init';
 // It was removed in Angular 6.X, more info can be found here:
 // https://github.com/angular/angular-cli/issues/9827#issuecomment-369578814
 (window as any).global = window;
+global.process = require('process');

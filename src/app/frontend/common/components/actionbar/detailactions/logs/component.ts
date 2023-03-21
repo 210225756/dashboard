@@ -31,6 +31,7 @@ export class ActionbarDetailLogsComponent {
       'log',
       this.resourceMeta.objectMeta.name,
       this.resourceMeta.objectMeta.namespace,
+      this.resourceMeta.objectMeta.cluster,
       this.resourceMeta.typeMeta.kind,
     );
   }

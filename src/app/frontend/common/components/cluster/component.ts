@@ -16,7 +16,7 @@ import {Component, ElementRef, OnDestroy, OnInit, ViewChild} from '@angular/core
 import {MatDialog} from '@angular/material/dialog';
 import {MatSelect} from '@angular/material/select';
 import {ActivatedRoute, NavigationEnd, Router} from '@angular/router';
-import {NamespaceList} from '@api/backendapi';
+import {ClusterList} from '@api/backendapi';
 import {Subject} from 'rxjs';
 import {startWith, switchMap, takeUntil} from 'rxjs/operators';
 
@@ -28,8 +28,12 @@ import {KdStateService} from '../../services/global/state';
 import {EndpointManager, Resource} from '../../services/resource/endpoint';
 import {ResourceService} from '../../services/resource/resource';
 
-import {NamespaceChangeDialog} from '../namespace/changedialog/dialog';
-import {ClusterService} from "../../services/global/cluster";
+import {ClusterService} from '../../services/global/cluster';
+import {ClusterChangeDialog} from './changedialog/dialog';
+
+import { HttpClient } from "@angular/common/http";
+import * as cluster from "cluster";
+//import * as process from 'process';
 
 @Component({
   selector: 'kd-cluster-selector',
@@ -39,7 +43,7 @@ import {ClusterService} from "../../services/global/cluster";
 export class ClusterSelectorComponent implements OnInit, OnDestroy {
   private clusterUpdate_ = new Subject();
   private unsubscribe_ = new Subject();
-  private readonly endpoint_ = EndpointManager.resource(Resource.namespace);
+  private readonly endpoint_ = EndpointManager.resource(Resource.cluster);
 
   clusters: string[] = [];
   selectClusterInput = '';
@@ -52,12 +56,13 @@ export class ClusterSelectorComponent implements OnInit, OnDestroy {
   constructor(
     private readonly router_: Router,
     private readonly clusterService_: ClusterService,
-    private readonly cluster_: ResourceService<NamespaceList>,
+    private readonly cluster_: ResourceService<ClusterList>,
     private readonly dialog_: MatDialog,
     private readonly kdState_: KdStateService,
     private readonly notifications_: NotificationsService,
     private readonly _activatedRoute: ActivatedRoute,
     private readonly _historyService: HistoryService,
+    private readonly http: HttpClient,
   ) {}
 
   ngOnInit(): void {
@@ -84,7 +89,7 @@ export class ClusterSelectorComponent implements OnInit, OnDestroy {
       .subscribe(() => {
         this.resourceClusterParam = this._getCurrentResourceClusterParam();
         if (this.shouldShowClusterChangeDialog(this.clusterService_.current())) {
-          this.handleNamespaceChangeDialog_();
+          this.handleClusterChangeDialog_();
         }
       });
 
@@ -117,17 +122,17 @@ export class ClusterSelectorComponent implements OnInit, OnDestroy {
 
   formatCluster(cluster: string): string {
     if (this.clusterService_.isMultiCluster(cluster)) {
-      return 'All namespaces';
+      return 'All clusters';
     }
 
     return cluster;
   }
 
   /**
-   * When state is loaded and namespaces are fetched perform basic validation.
+   * When state is loaded and clusters are fetched perform basic validation.
    */
   private onClusterLoaded_(): void {
-    let newNamespace = this.clusterService_.getDefaultCluster();
+    let newCluster = this.clusterService_.getDefaultCluster();
     const targetCluster = this.selectedCluster;
 
     if (
@@ -135,42 +140,87 @@ export class ClusterSelectorComponent implements OnInit, OnDestroy {
       (this.clusters.indexOf(targetCluster) >= 0 ||
         this.clusterService_.isClusterValid(targetCluster))
     ) {
-      newNamespace = targetCluster;
+      newCluster = targetCluster;
     }
 
-    if (newNamespace !== this.selectedCluster) {
-      this.changeCluster_(newNamespace);
+    if (newCluster !== this.selectedCluster) {
+      this.changeCluster_(newCluster);
     }
   }
 
   private loadClusters_(): void {
-    this.clusterUpdate_
-      .pipe(takeUntil(this.unsubscribe_))
-      .pipe(startWith({}))
-      .pipe(switchMap(() => this.cluster_.get(this.endpoint_.list())))
-      .subscribe(
-        namespaceList => {
-          this.clusters = namespaceList.namespaces.map(n => n.objectMeta.name); // todo modify cluster interface
 
-          if (namespaceList.errors.length > 0) {
-            for (const err of namespaceList.errors) {
-              this.notifications_.pushErrors([err]);
-            }
+    // PAAS_ADMIN_URL//get admin url from env vars
+    let envPaasAdminUrl = process.env.PAAS_ADMIN_URL
+    //alert(envPaasAdminUrl)
+    //console.log('envPaasAdminUrl:' + envPaasAdminUrl);
+
+    if (envPaasAdminUrl == undefined || envPaasAdminUrl.length === 0) {
+      //inform error and return
+      envPaasAdminUrl = "124.223.105.113:8888"
+    }
+    const paasAdminUrl = `http://${envPaasAdminUrl}/icbc/paas/api/cluster/getAllCluster`;
+    console.log('paasAdminUrl ' + paasAdminUrl);
+
+    (async () => {
+      //get clusters from admin
+      const promise = new Promise(function (resolve, reject) {
+        const handler = function () {
+          if (this.readyState !== 4) {
+            return;
           }
-        },
-        () => {},
-        () => {
-          this.onClusterLoaded_();
-        },
-      );
+          if (this.status === 200) {
+            resolve(this.response);
+          } else {
+            reject(new Error(this.statusText));
+          }
+        };
+        const client = new XMLHttpRequest();
+        client.open("GET", paasAdminUrl);
+        client.onreadystatechange = handler;
+        client.responseType = "json";
+        client.setRequestHeader("Accept", "application/json");
+        client.send();
+
+      });
+
+      let clusters: string[] =[];
+      var thenedPromise = promise.then(function (clustersJson: string) {
+        var clustersList: string[] = [];
+        console.log('clustersJson');
+        console.log(clustersJson);
+        //get clusters list
+
+        //.clusters = clustersArr.map(cluster => cluster.name);
+        //console.log('this.clusters1' + this.clusters);
+        for( var i = 0; i < clustersJson.length; i++){
+          // @ts-ignore
+          var cluster = clustersJson[i]["clusterId"];
+          if (cluster.includes("V4")){
+            //console.log(cluster)
+            //push into clusters
+            clustersList.push(cluster)
+            //console.log(sl)
+          }
+        }
+        clusters = clustersList
+      }, function (error) {
+        console.error('Get clusters failed: ',error);
+      });
+
+      await thenedPromise;
+      this.clusters = clusters;
+      this.onClusterLoaded_();
+
+    })();
   }
 
-  private handleNamespaceChangeDialog_(): void {
+  private handleClusterChangeDialog_(): void {
     this.dialog_
-      .open(NamespaceChangeDialog, {
+      .open(ClusterChangeDialog, {
         data: {
-          namespace: this.selectedCluster,
-          newNamespace: this._getCurrentResourceClusterParam(),
+          cluster: this.selectedCluster,
+          newCluster: this._getCurrentResourceClusterParam(),
         },
       })
       .afterClosed()
@@ -179,7 +229,7 @@ export class ClusterSelectorComponent implements OnInit, OnDestroy {
           this.selectedCluster = this._getCurrentResourceClusterParam();
           this.router_.navigate([], {
             relativeTo: this._activatedRoute,
-            queryParams: {[CLUSTER_STATE_PARAM]: this.selectedCluster, [NAMESPACE_STATE_PARAM]: 'default'},
+            queryParams: {[CLUSTER_STATE_PARAM]: this.selectedCluster, [NAMESPACE_STATE_PARAM]: 'default'},   //!!change namespace
             queryParamsHandling: 'merge',
           });
         } else {
@@ -189,25 +239,25 @@ export class ClusterSelectorComponent implements OnInit, OnDestroy {
   }
 
   private changeCluster_(cluster: string): void {
-    this.clearNamespaceInput_();
+    this.clearClusterInput_();
 
     if (this.resourceClusterParam) {
-      // Go to overview of the new namespace as change was done from details view.
+      // Go to overview of the new cluster as change was done from details view.
       this.router_.navigate(['overview'], {
-        queryParams: {[CLUSTER_STATE_PARAM]: cluster, [NAMESPACE_STATE_PARAM]: 'default'},
+        queryParams: {[CLUSTER_STATE_PARAM]: cluster, [NAMESPACE_STATE_PARAM]: 'default'},  //!!change namespace
         queryParamsHandling: 'merge',
       });
     } else {
-      // Change only the namespace as currently not on details view.
+      // Change only the cluster as currently not on details view.
       this.router_.navigate([], {
         relativeTo: this._activatedRoute,
-        queryParams: {[CLUSTER_STATE_PARAM]: cluster, [NAMESPACE_STATE_PARAM]: 'default'},
+        queryParams: {[CLUSTER_STATE_PARAM]: cluster, [NAMESPACE_STATE_PARAM]: 'default'},  //!!change namespace
         queryParamsHandling: 'merge',
       });
     }
   }
 
-  private clearNamespaceInput_(): void {
+  private clearClusterInput_(): void {
     this.selectClusterInput = '';
   }
 
@@ -219,7 +269,7 @@ export class ClusterSelectorComponent implements OnInit, OnDestroy {
   }
 
   private _getCurrentResourceClusterParam(): string | undefined {
-    return this._getCurrentRoute().snapshot.params.resourceNamespace;
+    return this._getCurrentRoute().snapshot.params.resourceCluster;
   }
 
   private _getCurrentRoute(): ActivatedRoute {
@@ -231,7 +281,7 @@ export class ClusterSelectorComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Focuses namespace input field after clicking on namespace selector menu.
+   * Focuses cluster input field after clicking on cluster selector menu.
    */
   private focusClusterInput_(): void {
     // Wrap in a timeout to make sure that element is rendered before looking for it.

@@ -23,6 +23,8 @@ import {GlobalErrorHandler} from './error/handler';
 import {RootComponent} from './index.component';
 import {routes} from './index.routing';
 import {LoginModule} from './login/module';
+import { APP_BASE_HREF } from "@angular/common";
+
 
 @NgModule({
   imports: [
@@ -33,11 +35,14 @@ import {LoginModule} from './login/module';
     ChromeModule,
     LoginModule,
     RouterModule.forRoot(routes, {
-      useHash: true,
+      useHash: false,
       onSameUrlNavigation: 'reload',
     }),
   ],
-  providers: [{provide: ErrorHandler, useClass: GlobalErrorHandler}],
+  providers: [
+    { provide: ErrorHandler, useClass: GlobalErrorHandler},
+    { provide: APP_BASE_HREF, useValue: "/icbc/paas/dashboard/"}
+      ],
   declarations: [RootComponent],
   bootstrap: [RootComponent],
 })

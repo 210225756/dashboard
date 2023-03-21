@@ -56,6 +56,7 @@ export class ShellComponent implements AfterViewInit, OnDestroy {
   containers: string[];
 
   private readonly namespace_: string;
+  private readonly cluster_: string;
   private connecting_: boolean;
   private connectionClosed_: boolean;
   private conn_: WebSocket;
@@ -76,6 +77,7 @@ export class ShellComponent implements AfterViewInit, OnDestroy {
     private readonly _router: Router,
   ) {
     this.namespace_ = this.activatedRoute_.snapshot.params.resourceNamespace;
+    this.cluster_ = this.activatedRoute_.snapshot.params.resourceCluster;
     this.podName = this.activatedRoute_.snapshot.params.resourceName;
 
     const containersEndpoint = this.endpoint_.child(
@@ -130,7 +132,7 @@ export class ShellComponent implements AfterViewInit, OnDestroy {
   }
 
   onPodContainerChange(podContainer: string): void {
-    this._router.navigate([`/shell/${this.namespace_}/${this.podName}/${podContainer}`], {
+    this._router.navigate([`/shell/${this.cluster_}/${this.namespace_}/${this.podName}/${podContainer}`], {
       queryParamsHandling: 'preserve',
     });
   }

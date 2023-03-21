@@ -15,8 +15,7 @@
 package handler
 
 import (
-  "github.com/kubernetes/dashboard/src/app/backend/client"
-  "log"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -80,6 +79,8 @@ const (
 	// ResponseLogString is a template for response log message.
 	ResponseLogString = "[%s] Outcoming response to %s with %d status code"
 )
+
+var clusters, err = GetAllCluster()
 
 // APIHandler is a representation of API handler. Structure contains clientapi, Heapster clientapi and clientapi configuration.
 type APIHandler struct {
@@ -219,7 +220,7 @@ func CreateHTTPAPIHandler(iManager integration.IntegrationManager, cManager clie
 			Writes(common.EventList{}))
 
 	apiV1Ws.Route(
-		apiV1Ws.GET("/pod").
+		apiV1Ws.GET("/pod/{cluster}").
 			To(apiHandler.handleGetPods).
 			Writes(pod.PodList{}))
 	apiV1Ws.Route(
@@ -1281,7 +1282,16 @@ func (apiHandler *APIHandler) handleGetReplicaSetEvents(request *restful.Request
 }
 
 func (apiHandler *APIHandler) handleGetPodEvents(request *restful.Request, response *restful.Response) {
-	k8sClient, err := apiHandler.cManager.Client(request)
+	cluster := request.PathParameter("cluster")
+	log.Println("handleGetPodEvents cluster: " + cluster)
+	clientManager, err := GetClient(clusters, cluster)
+	versionInfo, err := clientManager.InsecureClient().Discovery().ServerVersion()
+	if err != nil {
+		handleFatalInitError(err)
+	}
+	log.Printf("Successful initial request to the apiserver, version: %s", versionInfo.String())
+	k8sClient, err := clientManager.Client(request)
+	//k8sClient, err := apiHandler.cManager.Client(request)
 	if err != nil {
 		errors.HandleInternalError(response, err)
 		return
@@ -1308,7 +1318,16 @@ func (apiHandler *APIHandler) handleExecShell(request *restful.Request, response
 		return
 	}
 
-	k8sClient, err := apiHandler.cManager.Client(request)
+	cluster := request.PathParameter("cluster")
+	log.Println("handleExecShell cluster: " + cluster)
+	clientManager, err := GetClient(clusters, cluster)
+	versionInfo, err := clientManager.InsecureClient().Discovery().ServerVersion()
+	if err != nil {
+		handleFatalInitError(err)
+	}
+	log.Printf("Successful initial request to the apiserver, version: %s", versionInfo.String())
+	k8sClient, err := clientManager.Client(request)
+	//k8sClient, err := apiHandler.cManager.Client(request)
 	if err != nil {
 		errors.HandleInternalError(response, err)
 		return
@@ -1422,16 +1441,18 @@ func (apiHandler *APIHandler) handleGetDeploymentNewReplicaSet(request *restful.
 }
 
 func (apiHandler *APIHandler) handleGetPods(request *restful.Request, response *restful.Response) {
-  //log.Print("Successful initial request to the apiserver, version: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-  //print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-  //clientManager := client.NewClientManager("/etc/kubernetes/kubelet.conf", "https://192.168.142.131:6443")
-  clientManager := client.NewClientManager("/home/V4-XMZ.config", "https://192.168.142.131:6443")
-  versionInfo, err := clientManager.InsecureClient().Discovery().ServerVersion()
-  if err != nil {
-   handleFatalInitError(err)
-  }
-  log.Printf("Successful initial request to the apiserver, version: %s", versionInfo.String())
-  k8sClient, err := clientManager.Client(request)
+	//log.Print("Successful initial request to the apiserver, version: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	//clientManager := client.NewClientManager("/etc/kubernetes/kubelet.conf", "https://192.168.142.131:6443")
+	//clientManager := client.NewClientManager("/etc/kubernetes/kubelet.conf", "https://127.0.0.1:6443")
+	cluster := request.PathParameter("cluster")
+	log.Println("handleGetPods cluster: " + cluster)
+	clientManager, err := GetClient(clusters, cluster)
+	versionInfo, err := clientManager.InsecureClient().Discovery().ServerVersion()
+	if err != nil {
+		handleFatalInitError(err)
+	}
+	log.Printf("Successful initial request to the apiserver, version: %s", versionInfo.String())
+	k8sClient, err := clientManager.Client(request)
 	//k8sClient, err := apiHandler.cManager.Client(request)
 	if err != nil {
 		errors.HandleInternalError(response, err)
@@ -1450,7 +1471,19 @@ func (apiHandler *APIHandler) handleGetPods(request *restful.Request, response *
 }
 
 func (apiHandler *APIHandler) handleGetPodDetail(request *restful.Request, response *restful.Response) {
-	k8sClient, err := apiHandler.cManager.Client(request)
+	log.Println("handleGetPodDetail cluster: " + request.PathParameter("namespace"))
+	log.Println("handleGetPodDetail ns: " + request.PathParameter("cluster"))
+
+	cluster := request.PathParameter("cluster")
+	log.Println("handleGetPodDetail cluster: " + cluster)
+	clientManager, err := GetClient(clusters, cluster)
+	versionInfo, err := clientManager.InsecureClient().Discovery().ServerVersion()
+	if err != nil {
+		handleFatalInitError(err)
+	}
+	log.Printf("Successful initial request to the apiserver, version: %s", versionInfo.String())
+	k8sClient, err := clientManager.Client(request)
+	//k8sClient, err := apiHandler.cManager.Client(request)
 	if err != nil {
 		errors.HandleInternalError(response, err)
 		return
@@ -1848,7 +1881,16 @@ func (apiHandler *APIHandler) handleGetPersistentVolumeClaimDetail(request *rest
 }
 
 func (apiHandler *APIHandler) handleGetPodContainers(request *restful.Request, response *restful.Response) {
-	k8sClient, err := apiHandler.cManager.Client(request)
+	cluster := request.PathParameter("cluster")
+	log.Println("handleGetPodContainers cluster: " + cluster)
+	clientManager, err := GetClient(clusters, cluster)
+	versionInfo, err := clientManager.InsecureClient().Discovery().ServerVersion()
+	if err != nil {
+		handleFatalInitError(err)
+	}
+	log.Printf("Successful initial request to the apiserver, version: %s", versionInfo.String())
+	k8sClient, err := clientManager.Client(request)
+	//k8sClient, err := apiHandler.cManager.Client(request)
 	if err != nil {
 		errors.HandleInternalError(response, err)
 		return
@@ -2264,7 +2306,16 @@ func (apiHandler *APIHandler) handleGetStorageClassPersistentVolumes(request *re
 
 func (apiHandler *APIHandler) handleGetPodPersistentVolumeClaims(request *restful.Request,
 	response *restful.Response) {
-	k8sClient, err := apiHandler.cManager.Client(request)
+	cluster := request.PathParameter("cluster")
+	log.Println("handleGetPodPersistentVolumeClaims cluster: " + cluster)
+	clientManager, err := GetClient(clusters, cluster)
+	versionInfo, err := clientManager.InsecureClient().Discovery().ServerVersion()
+	if err != nil {
+		handleFatalInitError(err)
+	}
+	log.Printf("Successful initial request to the apiserver, version: %s", versionInfo.String())
+	k8sClient, err := clientManager.Client(request)
+	//k8sClient, err := apiHandler.cManager.Client(request)
 	if err != nil {
 		errors.HandleInternalError(response, err)
 		return
@@ -2494,11 +2545,10 @@ func parseNamespacePathParameter(request *restful.Request) *common.NamespaceQuer
 }
 
 func handleFatalInitError(err error) {
-  log.Fatalf("Error while initializing connection to Kubernetes apiserver. "+
-    "This most likely means that the cluster is misconfigured (e.g., it has "+
-    "invalid apiserver certificates or service account's configuration) or the "+
-    "--apiserver-host param points to a server that does not exist. Reason: %s\n"+
-    "Refer to our FAQ and wiki pages for more information: "+
-    "https://github.com/kubernetes/dashboard/wiki/FAQ", err)
+	log.Fatalf("Error while initializing connection to Kubernetes apiserver. "+
+		"This most likely means that the cluster is misconfigured (e.g., it has "+
+		"invalid apiserver certificates or service account's configuration) or the "+
+		"--apiserver-host param points to a server that does not exist. Reason: %s\n"+
+		"Refer to our FAQ and wiki pages for more information: "+
+		"https://github.com/kubernetes/dashboard/wiki/FAQ", err)
 }
-

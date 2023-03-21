@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/kubernetes/dashboard/src/app/backend/client"
-  clientapi "github.com/kubernetes/dashboard/src/app/backend/client/api"
-  "io/ioutil"
+	clientapi "github.com/kubernetes/dashboard/src/app/backend/client/api"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -25,8 +25,12 @@ type ClusterInfo struct {
 func GetAllCluster() ([]ClusterInfo, error) {
 	// PAAS_ADMIN_URL is paas admin domain address
 	envPaasAdminUrl := os.Getenv("PAAS_ADMIN_URL")
-  //envPaasAdminUrl := "192.168.66.1:8888"
-  var p []ClusterInfo
+	/*if envPaasAdminUrl == "" {
+		envPaasAdminUrl = "124.223.105.113:8888"
+	}
+
+	 */
+	var p []ClusterInfo
 	if envPaasAdminUrl == "" {
 		return p, fmt.Errorf("PAAS_ADMIN_URL should not be empty")
 	}
@@ -44,13 +48,27 @@ func GetAllCluster() ([]ClusterInfo, error) {
 	}
 	return p, fmt.Errorf("ERROR when get all cluster from paas plat, the status code is %s", resp.StatusCode)
 }
+
 // GetClient change client-go
 func GetClient(clusterList []ClusterInfo, cluster string) (clientapi.ClientManager, error) {
+	file := "/usr/local/go/src/github.com/kubernetes/dashboard/log.txt"
+	logFile, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0766)
+	if err != nil {
+		panic(err)
+	}
+	log.SetOutput(logFile)
+	log.SetPrefix("[dashboard]")
+	log.SetFlags(log.LstdFlags | log.Lshortfile | log.LUTC)
+
 	kubeConfigDir := os.Getenv("KUBE_CONFIG_DIR")
+	//kubeConfigDir = "/etc/kubernetes"
+	log.Println("kubeConfigDir: " + kubeConfigDir)
 	if kubeConfigDir == "" {
 		return nil, fmt.Errorf("KUBE_CONFIG_DIR should not be empty")
 	}
-	kubeConfigPath := fmt.Sprintf("%s/%s", kubeConfigDir, cluster)
+	kubeConfigPath := fmt.Sprintf("%s/%s/dashboard.kubeconfig", kubeConfigDir, cluster)
+	//kubeConfigPath = fmt.Sprintf("%s/kubelet.conf", kubeConfigDir)
+	log.Println("kubeConfigPath: " + kubeConfigPath)
 	exist, err := KubeConfigExists(kubeConfigPath)
 	if !exist {
 		return nil, err
