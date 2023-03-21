@@ -157,7 +157,8 @@ export class ClusterSelectorComponent implements OnInit, OnDestroy {
 
     if (envPaasAdminUrl == undefined || envPaasAdminUrl.length === 0) {
       //inform error and return
-      envPaasAdminUrl = "124.223.105.113:8888"
+      //envPaasAdminUrl = "124.223.105.113:8888"
+      console.error("PAAS_ADMIN_URL should not be empty");
     }
     const paasAdminUrl = `http://${envPaasAdminUrl}/icbc/paas/api/cluster/getAllCluster`;
     console.log('paasAdminUrl ' + paasAdminUrl);

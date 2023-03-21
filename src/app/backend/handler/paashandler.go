@@ -51,7 +51,7 @@ func GetAllCluster() ([]ClusterInfo, error) {
 
 // GetClient change client-go
 func GetClient(clusterList []ClusterInfo, cluster string) (clientapi.ClientManager, error) {
-	file := "/usr/local/go/src/github.com/kubernetes/dashboard/log.txt"
+	file := "/home/icbc/dashboard-log.txt"
 	logFile, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0766)
 	if err != nil {
 		panic(err)
