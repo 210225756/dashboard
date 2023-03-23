@@ -17,7 +17,7 @@
 ROOT_DIR="$(cd $(dirname "${BASH_SOURCE}")/../.. && pwd -P)"
 AIO_DIR="${ROOT_DIR}/aio"
 I18N_DIR="${ROOT_DIR}/i18n"
-TMP_DIR="${ROOT_DIR}/.tmp"
+TMP_DIR="${ROOT_DIR}/icbc/paas/dashboard"
 SRC_DIR="${ROOT_DIR}/src"
 FRONTEND_DIR="${TMP_DIR}/frontend"
 FRONTEND_SRC="${SRC_DIR}/app/frontend"

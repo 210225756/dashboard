@@ -41,8 +41,7 @@ import { APP_BASE_HREF } from "@angular/common";
   ],
   providers: [
     { provide: ErrorHandler, useClass: GlobalErrorHandler},
-    { provide: APP_BASE_HREF, useValue: "/icbc/paas/dashboard/"}
-      ],
+    { provide: APP_BASE_HREF, useValue: "/icbc/paas/dashboard/"}],
   declarations: [RootComponent],
   bootstrap: [RootComponent],
 })
