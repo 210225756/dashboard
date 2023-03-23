@@ -34,8 +34,9 @@ function build::frontend {
   ${NG_BIN} build \
             --aot \
             --prod \
-            --localize \
-            --outputPath=${FRONTEND_DIR}
+#            --localize \
+            --outputPath=${FRONTEND_DIR} \
+            --base-href=/icbc/paas/dashboard
 }
 
 function build::backend {
